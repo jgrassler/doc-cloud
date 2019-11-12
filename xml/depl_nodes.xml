@@ -5986,7 +5986,7 @@ monitoring</guimenu>
   </figure>
  </sect1>
  <sect1 xml:id="sec-depl-ostack-octavia">
-  <title>Deploying octavia</title>
+  <title>Deploying Octavia</title>
   <para>
     &productname; provides &octavia; Load Balancing as a Service (LBaaS). It is
     used to manage a fleet of virtual machines, containers, or bare metal
@@ -6066,12 +6066,12 @@ monitoring</guimenu>
     <term>network</term>
     <listitem>
      <para>
-       &octavia; cannot accomplish what it does without manipulating the
-       network environment. Amphorae are spun up with a network interface
-       on the <literal>load balancer network</literal>. They can also
-       plug directly into tenant networks to reach back-end pool members,
-       depending on how any given load balancing service is deployed by
-       the tenant.
+       Octavia cannot accomplish what it does without manipulating the
+       network environment. Amphorae are spun up with a network
+       interface on the <literal>load balancer network</literal>. They
+       can also plug directly into tenant networks to reach back-end
+       pool members, depending on how any given load balancing service
+       is deployed by the tenant.
      </para>
     </listitem>
    </varlistentry>
@@ -6149,46 +6149,67 @@ monitoring</guimenu>
     </varlistentry>
   </variablelist>
   <important>
-    <para>In the neutron barclamp, the user has to select Load Balancer as a
-    Service to use &octavia;. &octavia; is not automatically deployed
-    in &crow;.</para>
+    <para>
+      In the neutron barclamp, the user has to select Load Balancer as
+      a Service to use &octavia;. &octavia; is not automatically
+      deployed in &crow;.
+    </para>
   </important>
   <sect2 xml:id="sec-depl-ostack-octavia-prereqs">
     <title>Prerequisites</title>
-    <para>Octavia uses a load balancer network, <literal>lb-mgmt-net</literal>,
-    as a management network that the controller uses to communicate with the
-    amphorae. The amphorae that &octavia; deploys have interfaces and IP
-    addresses on this network. It’s important that the subnet deployed on this
-    network be sufficiently large to allow for the maximum number of amphorae
-    and controllers likely to be deployed throughout the lifespan of the cloud
-    installation.</para>
-    <para>At the present time, though IPv4 subnets are used by default for the
-    LB Network (for example: 172.16.0.0/12), IPv6 subnets can be used for the
-    LB Network. The LB Network is isolated from tenant networks on the amphorae by means
-    of network namespaces on the amphorae. Therefore, operators need not be
-    concerned about overlapping subnet ranges with tenant networks.</para>
-    <para>For more information, see the
-    <link xlink:href="https://docs.openstack.org/octavia/latest/contributor/guides/dev-quick-start.html#load-balancer-network-configuration">Load Balancer Network Configuration</link>
-    section from the &ostack; documentation.</para>
-    <para>By default the name is
-      <literal>lb-mgmt-net</literal>, this can be overridden in the
-      <literal>raw</literal> mode of the barclamp.</para>
-    <para>The backend services (deployed by the <literal>octavia-backend</literal> role)
-      needs to be able to talk to amphorae over the <literal>lb-mgmt-net</literal>.
-      Connect the <literal>lb-mgmt-net</literal> network to an external
-      network outside the cloud network, or a network that the backend can
-      connect through. Ensure the backend nodes know how to route to it.</para>
-    <para>Connect the network to a neutron router and ensure any physical
-      firewall rules are in place in order for the backend communitcation
-      to work.</para>
+    <para>
+      Octavia uses a load balancer network,
+      <literal>lb-mgmt-net</literal>, as a management network that the
+      controller uses to communicate with the amphorae. The amphorae
+      that &octavia; deploys have interfaces and IP addresses on this
+      network. It’s important that the subnet deployed on this network
+      be sufficiently large to allow for the maximum number of
+      amphorae and controllers likely to be deployed throughout the
+      lifespan of the cloud installation.
+    </para>
+    <para>
+      At the present time, though IPv4 subnets are used by default for
+      the LB Network (for example: 172.16.0.0/12), IPv6 subnets can be
+      used for the LB Network. The LB Network is isolated from tenant
+      networks on the amphorae by means of network namespaces on the
+      amphorae. Therefore, operators need not be concerned about
+      overlapping subnet ranges with tenant networks.
+    </para>
+    <para>
+      For more information, see the <link
+      xlink:href="https://docs.openstack.org/octavia/latest/contributor/guides/dev-quick-start.html#load-balancer-network-configuration">Load
+      Balancer Network Configuration</link> section from the &ostack;
+      documentation.
+    </para>
+    <para>
+      By default the name is <literal>lb-mgmt-net</literal>, this can
+      be overridden in the <literal>raw</literal> mode of the
+      barclamp.
+    </para>
+    <para>
+      The backend services (deployed by the
+      <literal>octavia-backend</literal> role) needs to be able to
+      talk to amphorae over the <literal>lb-mgmt-net</literal>.
+      Connect the <literal>lb-mgmt-net</literal> network to an
+      external network outside the cloud network, or a network that
+      the backend can connect through. Ensure the backend nodes know
+      how to route to it.
+    </para>
+    <para>
+      Connect the network to a neutron router and ensure any physical
+      firewall rules are in place in order for the backend
+      communitcation to work.
+    </para>
   </sect2>
   <sect2 xml:id="sec-depl-ostack-octavia-certificates">
     <title>Certificates</title>
-    <para>Octavia administrators sets up certificate authorities for the two-way
-      TLS authentication used in Octavia for command and control of amphora.
-      For more information, see the
-      <link xlink:href="https://docs.openstack.org/octavia/latest/admin/guides/certificates.html">Octavia Certificate Configuration Guide</link>
-<!--      or <xref linkend="self-assign-certs"/>-->.
+    <para>
+      Octavia administrators sets up certificate authorities for the
+      two-way TLS authentication used in Octavia for command and
+      control of amphora. For more information, see the <link
+      xlink:href="https://docs.openstack.org/octavia/latest/admin/guides/certificates.html">Octavia
+      Certificate Configuration Guide</link> <!-- or <xref
+      linkend="self-assign-certs"/>-->.
     </para>
   </sect2>
   <sect2 xml:id="sec-depl-ostack-octavia-raw-mode">
@@ -6196,9 +6217,8 @@ monitoring</guimenu>
     <para>
       If a user wants to be able to debug or get access to an amphora,
       you can provide an SSH keyname to the barclamp via the
-      <literal>raw mode</literal>.
-      This is a keyname to a key that has been uploaded to openstack. For
-      example:
+      <literal>raw mode</literal>. This is a keyname to a key that has
+      been uploaded to openstack. For example:
     </para>
     <screen>
       openstack keypair create --public-key /etc/octavia/.ssh/id_rsa_amphora.pub octavia_key

@@ -6224,7 +6224,7 @@ monitoring</guimenu>
       openstack keypair create --public-key /etc/octavia/.ssh/id_rsa_amphora.pub octavia_key
     </screen>
     <para>
-      barclamp raw mode
+      Note that the keypair has to be owned by the octavia user.
     </para>
   </sect2>
  </sect1>

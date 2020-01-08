@@ -5988,22 +5988,42 @@ monitoring</guimenu>
  <sect1 xml:id="sec-depl-ostack-octavia">
   <title>Deploying Octavia</title>
   <para>
-    &productname; provides &octavia; Load Balancing as a Service (LBaaS). It is
-    used to manage a fleet of virtual machines, containers, or bare metal
-    servers—collectively known as amphorae — which it spins up on demand.</para>
-    <note>
-      <para>
-        As of the Pike release, we recommend running &octavia; as a standalone
-        load balancing solution. Neutron LBaaS is deprecated in the Queens
-        release, and &octavia; is its replacement. Whenever possible, operators
-        are strongly advised to migrate to &octavia;.
-        For further information on OpenStack Neutron LBaaS deprecation, refer
-        to https://wiki.openstack.org/wiki/Neutron/LBaaS/Deprecation.
-      </para>
-    </note>
+    &productname; &productnumber; provides &octavia; Load Balancing as a Service
+    (LBaaS). It is used to manage a fleet of virtual machines, containers, or
+    bare metal servers—collectively known as amphorae — which it spins up on
+    demand.
+  </para>
+  <note>
     <para>
-      &octavia; consists of the following major components:
+      Starting with the &productname; &productnumber; release, we recommend
+      running &octavia; as a standalone load balancing solution. Neutron LBaaS
+      is deprecated in the OpenStack Queens release, and &octavia; is its
+      replacement. Whenever possible, operators are strongly advised to
+      migrate to &octavia;.
+      For further information on OpenStack Neutron LBaaS deprecation, refer
+      to https://wiki.openstack.org/wiki/Neutron/LBaaS/Deprecation.
     </para>
+  </note>
+  <important>
+    <para>
+      Deploying the &octavia; barclamp does not automatically run all tasks
+      required to complete the migration from Neutron LBaaS.
+    </para>
+    <para>
+      Please refer to <xref linkend="sec-depl-ostack-octavia-migrate-users"/>
+      for instructions on migrating existing users to allowing them to access
+      the Octavia load balancer API after the &octavia; barclamp is deployed.
+    </para>
+    <para>
+      Please refer to <xref linkend="sec-depl-ostack-octavia-migrate"/> for
+      instructions on migrating existing Neutron LBaaS load balancer instances
+      to &octavia; and on disabling the deprecated Neutron LBaaS provider
+      after the &octavia; barclamp is deployed.
+    </para>
+  </important>
+  <para>
+    &octavia; consists of the following major components:
+  </para>
   <variablelist>
    <varlistentry>
     <term>amphorae</term>
@@ -6079,9 +6099,9 @@ monitoring</guimenu>
  <para>The &ostack; &octavia; team has created a glossary of terms used within
    the context of the &octavia; project and Neutron LBaaS version 2.
    This glossary is available here: <link
-   xlink:href="https://docs.openstack.org/octavia/latest/reference/glossary.html">Octavia Glossary</link>.</para>
-    <para>In accomplishing its role, &octavia; makes use of other OpenStack
-      projects:</para>
+   xlink:href="https://docs.openstack.org/octavia/rocky/reference/glossary.html">Octavia Glossary</link>.</para>
+    <para>In accomplishing its role, &octavia; requires OpenStack services
+      managed by other barclamps to be already deployed:</para>
     <itemizedlist>
       <listitem>
         <para>
@@ -6112,20 +6132,6 @@ monitoring</guimenu>
           Glance - For storing the amphora virtual machine image.
         </para>
       </listitem>
-      <listitem>
-        <para>
-          Oslo - For communication between Octavia controller components,
-          making &octavia; work within the standard &ostack; framework and
-          review system, and project code structure.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Taskflow - Is technically part of Oslo; however, &octavia; makes
-          extensive use of this job flow system when orchestrating back-end
-          service configuration and management.
-        </para>
-      </listitem>
     </itemizedlist>
   <para>
     The &octavia; barclamp component consists of following roles:
@@ -6148,13 +6154,6 @@ monitoring</guimenu>
       </listitem>
     </varlistentry>
   </variablelist>
-  <important>
-    <para>
-      In the neutron barclamp, the user has to select Load Balancer as
-      a Service to use &octavia;. &octavia; is not automatically
-      deployed in &crow;.
-    </para>
-  </important>
   <sect2 xml:id="sec-depl-ostack-octavia-prereqs">
     <title>Prerequisites</title>
     <para>
@@ -6177,7 +6176,7 @@ monitoring</guimenu>
     </para>
     <para>
       For more information, see the <link
-      xlink:href="https://docs.openstack.org/octavia/latest/contributor/guides/dev-quick-start.html#load-balancer-network-configuration">Load
+      xlink:href="https://docs.openstack.org/octavia/rocky/contributor/guides/dev-quick-start.html#load-balancer-network-configuration">Load
       Balancer Network Configuration</link> section from the &ostack;
       documentation.
     </para>
@@ -6206,8 +6205,8 @@ monitoring</guimenu>
     <para>
       Octavia administrators sets up certificate authorities for the
       two-way TLS authentication used in Octavia for command and
-      control of amphora. For more information, see the <link
-      xlink:href="https://docs.openstack.org/octavia/latest/admin/guides/certificates.html">Octavia
+      control of amphorae. For more information, see the <link
+      xlink:href="https://docs.openstack.org/octavia/rocky/admin/guides/certificates.html">Octavia
       Certificate Configuration Guide</link> <!-- or <xref
       linkend="self-assign-certs"/>-->.
     </para>
@@ -6225,6 +6224,255 @@ monitoring</guimenu>
     </screen>
     <para>
       Note that the keypair has to be owned by the octavia user.
+    </para>
+  </sect2>
+  <sect2 xml:id="sec-depl-ostack-octavia-migrate-users">
+    <title>Migrating Users to Octavia</title>
+    <para>
+      Octavia employs a set of specialized roles to control access to the
+      load balancer API:
+      <variablelist>
+       <varlistentry>
+        <term>load-balancer_observer</term>
+        <listitem>
+         <para>
+           User has access to load-balancer read-only APIs.
+         </para>
+        </listitem>
+       </varlistentry>
+       <varlistentry>
+        <term>load-balancer_global_observer</term>
+        <listitem>
+         <para>
+           User has access to load-balancer read-only APIs including resources
+           owned by others.
+         </para>
+        </listitem>
+       </varlistentry>
+       <varlistentry>
+        <term>load-balancer_member</term>
+        <listitem>
+         <para>
+           User has access to load-balancer read and write APIs.
+         </para>
+        </listitem>
+       </varlistentry>
+       <varlistentry>
+        <term>load-balancer_quota_admin</term>
+        <listitem>
+         <para>
+           User is considered an admin for quota APIs only.
+         </para>
+        </listitem>
+       </varlistentry>
+       <varlistentry>
+        <term>load-balancer_admin</term>
+        <listitem>
+         <para>
+           User is considered an admin for all load-balancer APIs including
+           resources owned by others.
+         </para>
+        </listitem>
+       </varlistentry>
+      </variablelist>
+    </para>
+    <important>
+      <para>
+        This behaviour is not backwards compatible with the legacy Neutron LBaaS
+        API policy, as non-admin OpenStack users will not be allowed to access
+        the run <literal>openstack loadbalancer</literal> CLI commands or use
+        the load balancer horizon dashboard unless their accounts are explicitly
+        reconfigured to be associated with one or more of these roles.
+      </para>
+    </important>
+  </sect2>
+  <sect2 xml:id="sec-depl-ostack-octavia-migrate">
+    <title>Migrating Neutron LBaaS Instances to Octavia</title>
+    <para>
+      The migration procedure documented in this section is only relevant if
+      LBaaS is enabled in the Neutron barclamp, with either the HAProxy or H5
+      provider configured, and a number of load balancer instances using that
+      provider are still active. The procedure should be followed by operators
+      to migrate these Neutron LBaaS instances to Octavia, after deploying the
+      Octavia barclamp.
+    </para>
+    <para>
+      Octavia is a replacement for the Neutron LBaaS feature, that is deprecated
+      in the &productname; &productnumber; release. However, deploying the
+      Octavia barclamp does not automatically disable the legacy Neutron LBaaS
+      provider, if one is already configured in the Neutron barclamp.
+    </para>
+    <para>
+      With Octavia deployed, the OpenStack operator can use both load balancer
+      providers simultaneously:
+      <itemizedlist>
+        <listitem>
+          <para>
+            The (deprecated) <literal>neutron lbaas-...</literal> CLI
+            commands can be used to manage load balancer instances using the
+            legacy Neutron LBaaS provider configured in the Neutron barclamp.
+            Note that the legacy Neutron LBaaS instances will not be visible in
+            the load balancer horizon dashboard.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The <literal>openstack loadbalancer</literal> CLI commands as well
+            as the load balancer horizon dashboard can be used to manage Octavia
+            load balancers. Also note that OpenStack users are required to have
+            special roles associated with their projects to be able to access
+            the Octavia API, as covered in
+            <xref linkend="sec-depl-ostack-octavia-migrate-users"/>.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+    <para>
+      Both Octavia and Neutron LBaaS need to be enabled at the same time,
+      to facilitate the load balancer migration process. This way, operators
+      have a migration path they can use to gradually decommission Neutron LBaaS
+      load balancers that use the HAProxy or F5 provider and replace them with
+      Octavia load balancers.
+    </para>
+    <para>
+      When the load balancer migration is complete, the Neutron LBaaS provider
+      can either be switched to Octavia or turned off entirely in the Neutron
+      barclamp, to complete the migration process.
+    </para>
+    <para>
+      The only advantage of configuring Octavia as the Neutron LBaaS provider
+      is that it continues to allow users to manage Octavia load balancers via
+      the deprecated <literal>neutron lbaas-...</literal> CLI, but it is
+      otherwise recommended to disable LBaaS in the Neutron barclamp.
+    </para>
+    <important>
+      <para>
+        Disabling LBaaS or switching the LBaaS provider in the Neutron barclamp
+        to Octavia is not possible while there are load balancers still running
+        with the current provider and will result in a Neutron barclamp
+        redeployment failure. To avoid this, ensure that load balancer
+        instances that are running under the old provider are either migrated
+        or deleted.
+      </para>
+    </important>
+    <note>
+      <para>
+        (Optional): to prevent regular users from creating or changing the
+        configuration of currently running legacy Neutron LBaaS load balancer
+        instances during the migration process, the neutron API policy should be
+        temporarily changed to prevent these operations. For this purpose, a
+        <literal>neutron-lbaas.json</literal> file can be created in the
+        <literal>/etc/neutron/policy.d</literal> folder on all neutron-server
+        nodes (no service restart required):
+        <screen>
+mkdir /etc/neutron/policy.d
+cat > /etc/neutron/policy.d/neutron-lbaas.json &lt;&lt;EOF
+{
+  "context_is_admin": "role:admin",
+  "context_is_advsvc": "role:advsvc",
+  "default": "rule:admin_or_owner",
+  "create_loadbalancer": "rule:admin_only",
+  "update_loadbalancer": "rule:admin_only",
+  "get_loadbalancer": "!",
+  "delete_loadbalancer": "rule:admin_only",
+  "create_listener": "rule:admin_only",
+  "get_listener": "",
+  "delete_listener": "rule:admin_only",
+  "update_listener": "rule:admin_only",
+  "create_pool": "rule:admin_only",
+  "get_pool": "",
+  "delete_pool": "rule:admin_only",
+  "update_pool": "rule:admin_only",
+  "create_healthmonitor": "rule:admin_only",
+  "get_healthmonitor": "",
+  "update_healthmonitor": "rule:admin_only",
+  "delete_healthmonitor": "rule:admin_only",
+  "create_pool_member": "rule:admin_only",
+  "get_pool_member": "",
+  "update_pool_member": "rule:admin_only",
+  "delete_pool_member": "rule:admin_only"
+}
+EOF
+chown -R root:neutron /etc/neutron/policy.d
+chmod 640 /etc/neutron/policy.d/neutron-lbaas.json
+        </screen>
+      </para>
+    </note>
+    <para>
+      With all of the above in check, the actual migration process consists of
+      replacing Neutron LBaaS instances with Octavia instances. There are many
+      different ways to accomplish this, depending on the size and purpose of
+      the cloud deployment, the number of load balancers that need to be
+      migrated, the project and user configuration etc. This section only gives
+      a few pointers and recommendations on how to go about this tasks, while
+      the actual execution needs to be attuned to each particular situation.
+    </para>
+    <para>
+      Migrating a load balancer instance is generally comprised of these
+      steps:
+      <itemizedlist>
+        <listitem>
+          <para>
+            Use the <literal>neutron lbaas-...</literal> CLI to
+            retrieve information about the load balancer configuration,
+            including the complete set of related listener, pool, member
+            and health monitor instances
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Use the <literal>openstack loadbalancer</literal> CLI or the
+            load balancer horizon dashboard to create an Octavia load
+            balancer and its associated listener, pool, member and health
+            monitor instances that exactly matches the project and Neutron LBaaS
+            load balancer configuration extracted during the previous step.
+            Note that the Octavia load balancer instance and the Neutron
+            LBaaS instance cannot share the same VIP address value if
+            both instances are running at the same time. This could be a
+            problem, if the load balancer VIP address is accessed directly
+            (i.e. as opposed to being accessed via a floating IP).
+            In this case, the legacy load balancer instance needs to be
+            deleted first, which incurs a longer interruption in service
+            availability.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Once the Octavia instance is up and running, if a floating IP
+            is associated with the Neutron LBaaS load balancer VIP
+            address, re-associate the floating IP with the Octavia load
+            balancer VIP address. Using a floating IP has the advantage
+            that the migration can be performed with minimal downtime.
+            If the load balancer VIP address needs to be accessed directly
+            (e.g. from another VM attached to the same Neutron network or
+            router), then all the remote affected services need to be
+            reconfigured to use the new VIP address.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The two load balancer instances can continue to run in parallel,
+            while the functionality of the Octavia load balancer configuration
+            is verified. If any problems occur, the change can be reverted by
+            undoing the actions performed during the previous step. If a
+            floating IP is involved, this could be as simple as switching it
+            back to the Neutron LBaaS load balancer instance.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            When it's safe, delete the Neutron LBaaS load balancer instance,
+            along with all its related listener, pool, member and health
+            monitor instances.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+    <para>
+      Depending on the number of the load balancer instances that need to
+      be migrated and the complexity of the setup, the migration could be
+      either performed by the cloud operators, the owners themselves, or
+      both.
     </para>
   </sect2>
  </sect1>

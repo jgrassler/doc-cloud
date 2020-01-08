@@ -6011,7 +6011,7 @@ monitoring</guimenu>
     </para>
     <para>
       Please refer to <xref linkend="sec-depl-ostack-octavia-migrate-users"/>
-      for instructions on migrating existing users to allowing them to access
+      for instructions on migrating existing users to allow them to access
       the Octavia load balancer API after the &octavia; barclamp is deployed.
     </para>
     <para>
@@ -6279,8 +6279,8 @@ monitoring</guimenu>
     <important>
       <para>
         This behaviour is not backwards compatible with the legacy Neutron LBaaS
-        API policy, as non-admin OpenStack users will not be allowed to access
-        the run <literal>openstack loadbalancer</literal> CLI commands or use
+        API policy, as non-admin OpenStack users will not be allowed to run
+        <literal>openstack loadbalancer</literal> CLI commands or use
         the load balancer horizon dashboard unless their accounts are explicitly
         reconfigured to be associated with one or more of these roles.
       </para>
